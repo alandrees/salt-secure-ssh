@@ -1,13 +1,28 @@
 #!pyobjects
 
-Cmd.run('ssh-secure-sshd-remove-host-keys',
-        name= 'rm /etc/ssh/ssh_host_*')
 
-Cmd.run('ssh-secure-sshd-generate-ed25519-host-key',
-        name= 'ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key < /dev/null')
+if not __grains__['removed_system_keys']:
+    Cmd.run('ssh-secure-sshd-remove-host-keys',
+            name= 'rm /etc/ssh/ssh_host_*')
 
-Cmd.run('ssh-secure-sshd-generate-rsa-host-key',
-        name= 'ssh-keygen -t rsa -b 4096 -f /etc/ssh/ssh_host_rsa_key < /dev/null')
+    Grains.present('removed_system_keys',
+               name= 'removed_system_keys',
+               value= True)
+if not __grains__['ed25519_host_key_regenerated']:
+    Cmd.run('ssh-secure-sshd-generate-ed25519-host-key',
+            name= 'ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key < /dev/null')
+
+    Grains.present('ed25519_host_key_regen',
+                   name= 'ed25519_host_key_regenerated',
+                   value= True)
+
+if not __grains__['rsa_4096_host_key_regenerated']:
+    Cmd.run('ssh-secure-sshd-generate-rsa-host-key',
+            name= 'ssh-keygen -t rsa -b 4096 -f /etc/ssh/ssh_host_rsa_key < /dev/null')
+
+    Grains.present('rsa_4096_host_key_regen',
+                   name= 'rsa_4096_host_key_regenerated',
+                   value= True)
 
 File.replace('ssh-secure-sshd-remove-old-host-key',
              name= '/etc/ssh/sshd_config',
